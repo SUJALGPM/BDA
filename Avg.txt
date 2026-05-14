@@ -1,0 +1,146 @@
+AVERAGE OF NUMBERS USING MAPREDUCE (HADOOP STREAMING)
+
+=================================
+STEP 1 : Start Hadoop Services
+=================================
+
+start-dfs.sh
+
+start-yarn.sh
+
+
+=================================
+STEP 2 : Check Hadoop Services
+=================================
+
+jps
+
+
+=================================
+STEP 3 : Create input file
+=================================
+
+nano input.txt
+
+Example content:
+
+10
+20
+30
+40
+50
+
+Save:
+CTRL + X
+Y
+ENTER
+
+
+=================================
+STEP 4 : Create mapper.py
+=================================
+
+nano mapper.py
+
+Paste:
+
+#!/usr/bin/python3
+
+import sys
+
+for line in sys.stdin:
+    number = line.strip()
+
+    if number:
+        print(f"avg\t{number}")
+
+Save:
+CTRL + X
+Y
+ENTER
+
+
+=================================
+STEP 5 : Create reducer.py
+=================================
+
+nano reducer.py
+
+Paste:
+
+#!/usr/bin/python3
+
+import sys
+
+total = 0
+count = 0
+
+for line in sys.stdin:
+    key, value = line.strip().split('\t')
+    value = int(value)
+
+    total += value
+    count += 1
+
+average = total / count
+
+print("Average =", average)
+
+Save:
+CTRL + X
+Y
+ENTER
+
+
+=================================
+STEP 6 : Give execute permission
+=================================
+
+chmod +x mapper.py reducer.py
+
+
+=================================
+STEP 7 : Create HDFS directory
+=================================
+
+hdfs dfs -mkdir /input
+
+
+=================================
+STEP 8 : Upload file to HDFS
+=================================
+
+hdfs dfs -put input.txt /input
+
+
+=================================
+STEP 9 : Run MapReduce Job
+=================================
+
+hadoop jar /usr/local/hadoop/share/hadoop/tools/lib/hadoop-streaming*.jar \
+-files mapper.py,reducer.py \
+-mapper mapper.py \
+-reducer reducer.py \
+-input /input/input.txt \
+-output /output_avg
+
+
+=================================
+STEP 10 : View Output
+=================================
+
+hdfs dfs -cat /output_avg/part-00000
+
+
+=================================
+EXPECTED OUTPUT
+=================================
+
+Average = 30.0
+
+
+=================================
+STEP 11 : Delete output folder before rerun
+=================================
+
+hdfs dfs -rm -r /output_avg
